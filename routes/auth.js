@@ -27,13 +27,17 @@ router.post("/register", async (req,res)=>{
 router.post("/login", async(req,res)=>{
     try{
         const user = await User.findOne({username:req.body.username});
-        bcrypt.compare(req.body.password , user.password).then(()=>{
-            const accessToken = jwt.sign({
-                id: user._id,
-                isAdmin: user.isAdmin
-            },secretKey,{expiresIn:'6h'});
-            const {password, ...others} = user._doc;
-            res.status(200).json({...others, accessToken});
+        bcrypt.compare(req.body.password, user.password, (error,success)=>{
+            if(error){
+                res.send({accessToken:''});
+            }else if(success){
+                const accessToken = jwt.sign({
+                    id: user._id,
+                    isAdmin: user.isAdmin
+                },secretKey,{expiresIn:'10h'});
+                const {password,...others} = user._doc;
+                res.status(200).json({...others, accessToken});
+            }else{res.send({accessToken:''})}
         })
     } catch (err){
         res.status(500).json(err);
